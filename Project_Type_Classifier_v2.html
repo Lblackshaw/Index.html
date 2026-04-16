@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Type Classifier</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:14px;background:#F8F8F6;color:#222;min-height:100vh;padding:24px 16px}
+.page{max-width:860px;margin:0 auto}
+.page-header{background:#1F3864;color:#fff;border-radius:10px;padding:20px 24px;margin-bottom:24px}
+.page-header h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.page-header p{font-size:13px;opacity:.75;line-height:1.5}
+.progress-wrap{margin-bottom:20px}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:6px}
+.progress-track{height:4px;background:#E0E0E0;border-radius:2px;overflow:hidden}
+.progress-fill{height:4px;background:#378ADD;border-radius:2px;transition:width .3s}
+.q-block{background:#fff;border:0.5px solid #E0E0E0;border-radius:10px;padding:16px 18px;margin-bottom:10px}
+.q-label{font-size:13px;font-weight:700;color:#1F3864;margin-bottom:4px}
+.q-sub{font-size:11px;color:#888;margin-bottom:10px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;border:0.5px solid #E0E0E0;cursor:pointer;background:#FAFAF8;transition:border-color .12s,background .12s}
+.opt:hover{border-color:#AAAAAA;background:#fff}
+.opt.selected{border-color:#378ADD;background:#E6F1FB}
+.opt input{margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#185FA5}
+.opt-text{font-size:12px;color:#444;line-height:1.5}
+.result-wrap{background:#fff;border-radius:10px;border:0.5px solid #E0E0E0;overflow:hidden;margin-top:24px}
+.result-header{padding:18px 20px 14px}
+.result-type{font-size:18px;font-weight:700;margin-bottom:4px}
+.result-desc{font-size:12px;color:#555;line-height:1.5;margin-bottom:14px}
+.score-bar-wrap{margin-bottom:8px}
+.score-bar-meta{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.score-bar-track{height:7px;background:#EEEEEE;border-radius:4px;overflow:hidden}
+.score-bar-fill{height:7px;border-radius:4px;transition:width .4s}
+.result-roles{padding:16px 20px;border-top:0.5px solid #EEEEEE;background:#FAFAF8}
+.roles-title{font-size:12px;font-weight:700;color:#444;margin-bottom:8px}
+.pill-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#555}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.role-pill{font-size:11px;padding:5px 10px;border-radius:6px;border:0.5px solid #E0E0E0;line-height:1.3}
+.role-pill.core{background:#DBEAFE;color:#1E3A8A;border-color:#85B7EB;font-weight:700}
+.role-pill.support{background:#EDE7F6;color:#3C3489;border-color:#AFA9EC}
+.role-pill.light{background:#F1EFE8;color:#444441;border-color:#D3D1C7}
+.role-pill.not{background:#F5F5F5;color:#AAAAAA;border-color:#E0E0E0;text-decoration:line-through}
+.result-footer{padding:12px 20px;border-top:0.5px solid #EEEEEE;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.remaining{font-size:11px;color:#888}
+button{font-family:Arial,sans-serif;font-size:12px;padding:7px 16px;border-radius:6px;border:0.5px solid #CCCCCC;background:#fff;cursor:pointer;color:#333;transition:background .12s}
+button:hover{background:#F0F0F0}
+.btn-primary{background:#1F3864;color:#fff;border-color:#1F3864}
+.btn-primary:hover{background:#2E4D8A}
+.criteria-ref{background:#fff;border:0.5px solid #E0E0E0;border-radius:10px;padding:16px 18px;margin-top:24px}
+.criteria-ref h3{font-size:13px;font-weight:700;color:#1F3864;margin-bottom:12px}
+.criteria-table{width:100%;border-collapse:collapse;font-size:11px}
+.criteria-table th{background:#1F3864;color:#fff;padding:7px 10px;text-align:left;font-weight:700}
+.criteria-table td{padding:7px 10px;border-bottom:0.5px solid #EEEEEE;vertical-align:top;line-height:1.4;color:#444}
+.criteria-table tr:last-child td{border-bottom:none}
+.criteria-table tr:nth-child(even) td{background:#FAFAF8}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+.tag.trans{background:#E6F1FB;color:#185FA5}
+.tag.biz{background:#E1F5EE;color:#0F6E56}
+.tag.tech{background:#FAEEDA;color:#854F0B}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="page-header">
+  <h1>Project Type Classifier</h1>
+  <p>Answer 8 questions to identify whether your project is a Transformation, Business-led or Tech-led project — and see which roles should be involved at each stage.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta"><span id="progress-label">0 of 8 answered</span><span id="pct-label">0%</span></div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+</div>
+
+<div id="questions"></div>
+
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+  <button onclick="reset()">Reset all</button>
+</div>
+
+<div id="result-wrap" style="display:none"></div>
+
+<div class="criteria-ref">
+  <h3>Classification criteria reference</h3>
+  <table class="criteria-table">
+    <thead><tr><th style="width:18%">Criteria</th><th style="width:27%"><span class="tag trans">Transformation project</span></th><th style="width:27%"><span class="tag biz">Business-led project</span></th><th style="width:28%"><span class="tag tech">Tech-led project</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>Strategic alignment</strong></td><td>Enterprise-level transformation, organisation-wide benefits</td><td>Local BU goals or operational improvements</td><td>Technology strategy, infrastructure, lifecycle needs</td></tr>
+      <tr><td><strong>Cross-functionality</strong></td><td>Spans multiple BUs / functions — coordinated workstreams</td><td>Mostly one BU, limited cross-functional input</td><td>Mainly within Technology, limited external involvement</td></tr>
+      <tr><td><strong>Governance</strong></td><td>Formal programme governance, PMO, risk/benefits tracking</td><td>Light governance within the BU</td><td>IT-governed (sprints, CAB, release cycles)</td></tr>
+      <tr><td><strong>Complexity & impact</strong></td><td>High organisational, process or behavioural impact</td><td>Low-moderate, single team or BU</td><td>High technical complexity, low organisational impact</td></tr>
+      <tr><td><strong>Leadership engagement</strong></td><td>Active SLT involvement across multiple areas</td><td>Sponsored by BU leader, minimal senior intervention</td><td>Technology leader sponsored, technical risk focus</td></tr>
+      <tr><td><strong>Interdependency</strong></td><td>Multiple cross-programme dependencies, active management</td><td>Limited, mostly within a single unit</td><td>Technical dependencies managed within tech roadmaps</td></tr>
+      <tr><td><strong>Investment</strong></td><td>Large budgets, cross-functional resourcing, formal business case</td><td>Small-medium BU OPEX/CAPEX budgets</td><td>Tech budget: infrastructure, licences, upgrades</td></tr>
+      <tr><td><strong>Sustained change</strong></td><td>Requires adoption, behaviour change and long-term embedding</td><td>Localised change, behaviour change limited and contained</td><td>System adoption, stability and support — not behavioural</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+const QUESTIONS=[
+  {id:"strategic",label:"Strategic alignment",sub:"What level of strategic objective does this project support?",opts:[
+    {text:"Directly supports enterprise-level transformation or major strategic change — organisation-wide benefits",scores:{transformation:3,business:0,tech:0}},
+    {text:"Supports local business unit goals or operational improvements — scope limited to one area",scores:{transformation:0,business:3,tech:0}},
+    {text:"Driven by technology strategy, infrastructure needs, upgrades or lifecycle — benefits primarily technical",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"crossfunc",label:"Cross-functionality",sub:"How many business units or functions are involved?",opts:[
+    {text:"Spans multiple business units / functions — requires coordinated, interdependent workstreams",scores:{transformation:3,business:0,tech:1}},
+    {text:"Mostly one business unit with limited cross-functional input",scores:{transformation:0,business:3,tech:1}},
+    {text:"Delivered mainly within Technology — cross-functional involvement limited to requirements or testing",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"governance",label:"Governance",sub:"What governance and oversight is required?",opts:[
+    {text:"Requires formal programme governance, PMO support, risk/benefits tracking and senior decision forums",scores:{transformation:3,business:0,tech:1}},
+    {text:"Light governance within the business unit — standard project management only",scores:{transformation:0,business:3,tech:0}},
+    {text:"Governed through IT processes (sprints, release cycles, CAB) — Tech PMO rather than Transformation PMO",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"complexity",label:"Complexity & impact",sub:"What is the nature of the complexity involved?",opts:[
+    {text:"High complexity with significant organisational, process or behavioural impact",scores:{transformation:3,business:1,tech:0}},
+    {text:"Low-moderate complexity affecting a single team or BU — local process or policy changes",scores:{transformation:0,business:3,tech:0}},
+    {text:"Technical complexity may be high but organisational impact is low — mainly systems or platform changes",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"leadership",label:"Senior leadership engagement",sub:"What level of senior involvement is needed?",opts:[
+    {text:"Active involvement from senior leadership across multiple areas — strategic decisions required throughout",scores:{transformation:3,business:0,tech:0}},
+    {text:"Sponsored by a BU leader or manager — minimal senior intervention beyond sponsorship",scores:{transformation:0,business:3,tech:0}},
+    {text:"Sponsored by Technology leader — senior involvement relates to technical risk, security or architecture",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"dependency",label:"Interdependency",sub:"What does the dependency landscape look like?",opts:[
+    {text:"Multiple dependencies across programmes, platforms or change initiatives — requires active dependency management",scores:{transformation:3,business:0,tech:1}},
+    {text:"Limited dependencies, mostly within a single unit — low risk if unmanaged",scores:{transformation:0,business:3,tech:0}},
+    {text:"Primarily technical dependencies (API, platform, integration) — managed within tech roadmaps",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"investment",label:"Investment",sub:"How is this project funded and resourced?",opts:[
+    {text:"Large budgets, cross-functional resourcing — requires formal business case and benefits realisation",scores:{transformation:3,business:0,tech:1}},
+    {text:"Small-medium budgets from BU OPEX/CAPEX — moderate resource needs",scores:{transformation:0,business:3,tech:0}},
+    {text:"Tech budget focused (infrastructure, licences, upgrades, IT security) — resources mainly within Technology",scores:{transformation:0,business:0,tech:3}}]},
+  {id:"change",label:"Sustained change",sub:"What does lasting success look like?",opts:[
+    {text:"Requires adoption, behaviour change and long-term embedding to realise benefits",scores:{transformation:3,business:1,tech:0}},
+    {text:"Localised change within the business area — behaviour change limited and contained",scores:{transformation:0,business:3,tech:0}},
+    {text:"Sustained change relates to system adoption, stability and support processes — not behavioural",scores:{transformation:0,business:0,tech:3}}]}];
+const TYPE_META={
+  transformation:{label:"Transformation project",color:"#185FA5",bg:"#E6F1FB",border:"#85B7EB",
+    desc:"Enterprise-level, multi-workstream, organisation-wide change requiring formal governance, senior engagement and sustained adoption.",
+    roles:{core:["Transformation Director","Head of Transformation Office","Head of Business Change","Programme Managers","Project Managers","Portfolio & Change Manager","Change Manager","Change Adoption & Comms"],
+           support:["Technology PMO Manager","P&P - EA / SA / BA","Release Manager","Test Manager"],
+           light:["Finance","Proposition Owner","Project Sponsor (SLT)","Operations"],not:[]}},
+  business:{label:"Business-led project",color:"#0F6E56",bg:"#E1F5EE",border:"#5DCAA5",
+    desc:"Locally scoped, BU-led change — process, policy or operational improvements with light governance and contained people impact.",
+    roles:{core:["Project Sponsor (SLT)","Head of Business Change","Change Manager","Programme / Project Managers","Operations","Finance"],
+           support:["Head of Transformation Office","Portfolio & Change Manager","Change Adoption & Comms"],
+           light:["Transformation Director","Proposition Owner"],
+           not:["Release Manager","Technology PMO Manager"]}},
+  tech:{label:"Tech-led project",color:"#854F0B",bg:"#FAEEDA",border:"#EF9F27",
+    desc:"Technology-driven delivery — infrastructure, platforms, upgrades or product — with limited organisational change impact.",
+    roles:{core:["P&P - BA","Release Manager","Technology PMO Manager"],
+           support:["Head of Transformation Office","Portfolio & Change Manager","Test Manager"],
+           light:["Transformation Director","Proposition Owner","Finance","Project Sponsor (SLT)"],
+           not:["Head of Business Change","Change Manager","Change Adoption & Comms","Programme Managers"]}}
+};
+let answers={};
+function render(){
+  const c=document.getElementById("questions");c.innerHTML="";
+  QUESTIONS.forEach((q,qi)=>{
+    const b=document.createElement("div");b.className="q-block";
+    b.innerHTML=`<div class="q-label">${qi+1}. ${q.label}</div><div class="q-sub">${q.sub}</div><div class="opts" id="opts-${q.id}"></div>`;
+    c.appendChild(b);
+    const opts=b.querySelector(`#opts-${q.id}`);
+    q.opts.forEach((o,oi)=>{
+      const d=document.createElement("div");d.className="opt"+(answers[q.id]===oi?" selected":"");
+      d.innerHTML=`<input type="radio" name="${q.id}" ${answers[q.id]===oi?"checked":""}><span class="opt-text">${o.text}</span>`;
+      d.onclick=()=>select(q.id,oi);opts.appendChild(d);
+    });
+  });
+  updateProgress();updateResult();
+}
+function select(qid,oi){
+  answers[qid]=oi;
+  document.querySelectorAll(`#opts-${qid} .opt`).forEach((el,i)=>{el.classList.toggle("selected",i===oi);el.querySelector("input").checked=(i===oi);});
+  updateProgress();updateResult();
+}
+function updateProgress(){
+  const n=Object.keys(answers).length;
+  document.getElementById("progress-label").textContent=`${n} of 8 answered`;
+  document.getElementById("pct-label").textContent=`${Math.round(n/8*100)}%`;
+  document.getElementById("progress-fill").style.width=`${Math.round(n/8*100)}%`;
+}
+function updateResult(){
+  const n=Object.keys(answers).length;
+  const rw=document.getElementById("result-wrap");
+  if(n===0){rw.style.display="none";return;}
+  const scores={transformation:0,business:0,tech:0};
+  Object.entries(answers).forEach(([qid,oi])=>{const q=QUESTIONS.find(q=>q.id===qid);Object.entries(q.opts[oi].scores).forEach(([k,v])=>scores[k]+=v);});
+  const total=Object.values(scores).reduce((a,b)=>a+b,0)||1;
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const winner=sorted[0][0];const tm=TYPE_META[winner];
+  let html=`<div class="result-header" style="background:${tm.bg};border-bottom:0.5px solid ${tm.border}">
+    <div class="result-type" style="color:${tm.color}">${tm.label}</div>
+    <div class="result-desc">${tm.desc}</div>`;
+  sorted.forEach(([type,score])=>{
+    const m=TYPE_META[type];const pct=Math.round(score/total*100);
+    html+=`<div class="score-bar-wrap"><div class="score-bar-meta"><span style="color:${m.color};font-weight:700;font-size:11px">${m.label}</span><span style="font-size:11px;color:#888">${pct}%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${m.color}"></div></div></div>`;
+  });
+  html+=`</div><div class="result-roles"><div class="roles-title">Suggested role involvement</div>
+    <div class="pill-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#DBEAFE;border:0.5px solid #85B7EB"></span>Core — fully involved</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#EDE7F6;border:0.5px solid #AFA9EC"></span>Support — C / I</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#F1EFE8;border:0.5px solid #D3D1C7"></span>Light touch</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#F5F5F5;border:0.5px solid #E0E0E0"></span>Not typically involved</span>
+    </div><div class="role-grid">`;
+  tm.roles.core.forEach(r=>html+=`<div class="role-pill core">${r}</div>`);
+  tm.roles.support.forEach(r=>html+=`<div class="role-pill support">${r}</div>`);
+  tm.roles.light.forEach(r=>html+=`<div class="role-pill light">${r}</div>`);
+  tm.roles.not.forEach(r=>html+=`<div class="role-pill not">${r}</div>`);
+  html+=`</div></div><div class="result-footer">`;
+  if(n<8)html+=`<span class="remaining">${8-n} question${8-n>1?"s":""} remaining — result will refine as you answer more.</span>`;
+  html+=`</div>`;
+  rw.innerHTML=html;rw.style.display="block";
+}
+function reset(){answers={};render();document.getElementById("result-wrap").style.display="none";}
+render();
+</script>
+</body>
+</html>
